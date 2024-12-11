@@ -1,0 +1,196 @@
+<!-- templates/myapp/homepage.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Recommendations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #141414;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            padding: 20px;
+            text-align: center;
+        }
+        #movieForm {
+            margin: 20px 0;
+        }
+        #movieInput {
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+        }
+        #movieGrid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .movieCard {
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+            cursor: pointer; /* Indicates that the card is clickable */
+            transition: transform 0.2s;
+        }
+        .movieCard:hover {
+            transform: scale(1.05); /* Scale effect on hover */
+        }
+        .movieCard img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .movieTitle {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #e50914; /* Netflix red */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #f40612; /* Darker red on hover */
+        }
+        /* Popup styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #282828;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            color: #fff;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Movie Recommendations</h1>
+        <form id="movieForm">
+            <input type="text" id="movieInput" placeholder="Enter a movie name" required>
+            <button type="submit">Get Recommendations</button>
+        </form>
+    </header>
+
+    <section id="movieGrid">
+        <!-- Movie thumbnails will be dynamically loaded here by JavaScript -->
+    </section>
+
+    <!-- Modal for Movie Details -->
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <img id="modalPoster" src="" alt="" style="width: 100%; border-radius: 8px;">
+            <p id="modalYear"></p>
+            <p id="modalPlot"></p>
+        </div>
+    </div>
+
+    <script>
+        const movieGrid = document.getElementById('movieGrid');
+        const movieForm = document.getElementById('movieForm');
+        const movieInput = document.getElementById('movieInput');
+        const apiKey = '89eddc3e';
+
+        // Fetch top 10 movies and display on the homepage
+        const fetchMovies = async () => {
+            const movieIds = [
+                "tt0111161", "tt0068646", "tt0468569", "tt0071562", "tt0050083", 
+                "tt0108052", "tt0167260", "tt0110912", "tt0060196", "tt0137523",
+                "tt0080684", "tt0133093", "tt0109830", "tt0082971", "tt0073486", 
+                "tt0086190", "tt0120737", "tt0114369", "tt0078708", "tt0120815"
+            ];
+            
+            movieIds.forEach(async id => {
+                const res = await fetch(`http://www.omdbapi.com/?i=${id}&apikey=${apiKey}`);
+                const movie = await res.json();
+                createMovieCard(movie);
+            });
+        };
+
+        // Create a movie card for each movie
+        const createMovieCard = (movie) => {
+            const movieCard = document.createElement('div');
+            movieCard.classList.add('movieCard');
+            movieCard.innerHTML = `
+                <img src="${movie.Poster}" alt="${movie.Title}">
+                <div class="movieTitle">${movie.Title}</div>
+            `;
+            movieCard.addEventListener('click', () => showMovieDetails(movie));
+            movieGrid.appendChild(movieCard);
+        };
+
+        // Show movie details in a modal
+        const showMovieDetails = (movie) => {
+            document.getElementById('modalTitle').innerText = movie.Title;
+            document.getElementById('modalPoster').src = movie.Poster;
+            document.getElementById('modalYear').innerText = `Year: ${movie.Year}`;
+            document.getElementById('modalPlot').innerText = `Plot: ${movie.Plot}`;
+
+            const modal = document.getElementById('movieModal');
+            modal.style.display = 'block';
+        };
+
+        // Close modal
+        const closeModal = () => {
+            const modal = document.getElementById('movieModal');
+            modal.style.display = 'none';
+        };
+
+        movieForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const movieTitle = movieInput.value;
+            window.location.href = `/recommend?title=${movieTitle}`;
+        });
+
+        // Close the modal when the user clicks on <span> (x)
+        document.querySelector('.close').onclick = closeModal;
+
+        // Close the modal when the user clicks anywhere outside of the modal
+        window.onclick = (event) => {
+            const modal = document.getElementById('movieModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        fetchMovies();
+    </script>
+</body>
+</html>
